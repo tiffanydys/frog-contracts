@@ -55,6 +55,8 @@ contract PDWhitelistRewardToken is ERC20, ERC20Burnable, Ownable {
 
     function _beforeTokenTransfer(address, address, uint256) internal view override {
         // if the token is not from this contract, AND token is non transferrable - token transfer will be blocked
-        require(!isTokenTransferrable, "Transferring token is blocked.");
+        if(!isTokenTransferrable){
+            require(controllers[msg.sender], "Transfer BLOCKED. Only controllers can transfer.");
+        }
     }
 }

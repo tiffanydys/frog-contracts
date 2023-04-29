@@ -24,7 +24,7 @@ contract Seals is ERC721Enumerable, Ownable {
         uint256 costvalue3;
     }
 
-    TokenInfo[] public AllowedCrypto;
+    TokenInfo[] public AllowedCryptoSeals;
     
     Frogs frogNft;
     address public fundAddress;
@@ -49,20 +49,20 @@ contract Seals is ERC721Enumerable, Ownable {
       address _fundAddress,
       Frogs _frogNft
     ) ERC721(_name, _symbol) {
-      setBaseURI(_initBaseURI);
+      setBaseURISeals(_initBaseURI);
       setFundAddress(_fundAddress);
       frogNft = _frogNft;
       setMintWave(0, 3000, 0);
     }
 
-    function addCurrency(
+    function addCurrencySeals(
         IERC20 _paytoken1,
         IERC20 _paytoken2,
         uint256 _costvalue1,
         uint256 _costvalue2,
         uint256 _costvalue3
     ) public onlyOwner {
-        AllowedCrypto.push(
+        AllowedCryptoSeals.push(
             TokenInfo({
                 paytoken1: _paytoken1,
                 paytoken2: _paytoken2,
@@ -82,7 +82,7 @@ contract Seals is ERC721Enumerable, Ownable {
         require(!paused, "Minting is paused.");
         require(sealSupply + 1 <= allowedMintSupply, "Max supply reached!");
 
-        TokenInfo storage tokens = AllowedCrypto[activePID];
+        TokenInfo storage tokens = AllowedCryptoSeals[activePID];
         IERC20 paytokenSFL;
         IERC20 paytokenPDWL;
 
@@ -119,6 +119,12 @@ contract Seals is ERC721Enumerable, Ownable {
 
         require(msg.value >= costMATIC, "You do not have enough MATIC for this mint.");
 
+        // blacklist frog after successful whitelist mint
+        if (mintWave == 0 && _frogId >= 1) {
+            blacklistedFrog[_frogId] = true;
+            blacklistFrogSize = blacklistFrogSize + 1;
+        }
+
         if (costSFL > 0) {
             paytokenSFL.transferFrom(msg.sender, 0x000000000000000000000000000000000000dEaD, costSFL);
         }
@@ -129,14 +135,9 @@ contract Seals is ERC721Enumerable, Ownable {
         
         _safeMint(msg.sender, sealSupply + 1);
         sealSupply = sealSupply + 1;
-
-        // blacklist frog after successful whitelist mint
-        if (mintWave == 0 && _frogId >= 1) {
-            blacklistedFrog[_frogId] = true;
-        }
     }
 
-    function walletOfOwner(address _owner)
+    function walletOfOwnerSeals(address _owner)
     public
     view
     returns (uint256[] memory)
@@ -249,11 +250,11 @@ contract Seals is ERC721Enumerable, Ownable {
         fundAddress = _fundAddress;
     }
 
-    function setBaseURI(string memory _newBaseURI) public onlyOwner() {
+    function setBaseURISeals(string memory _newBaseURI) public onlyOwner() {
         baseURI = _newBaseURI;
     }
     
-    function setBaseExtension(string memory _newBaseExtension) public onlyOwner() {
+    function setBaseExtensionSeals(string memory _newBaseExtension) public onlyOwner() {
         baseExtension = _newBaseExtension;
     }
 

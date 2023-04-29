@@ -203,18 +203,22 @@ contract TadpoleIncubator is IERC721Receiver, Ownable {
         return tokens;
     }
 
-    function tadpolesOfOwner(address _owner)
+    function getTadpolesOfOwner(address _owner) 
         public
         view
         returns (uint256[] memory)
     {
         uint256 ownerTokenCount = tadpoleNft.balanceOf(_owner);
         uint256[] memory tokenIds = new uint256[](ownerTokenCount);
-        for (uint256 i = 1; i <= totalTadpoles; i++) {
+        uint256 currentSize;
+
+        for(uint256 i=1; i <= totalTadpoles; i++) {
             if (tadpoleNft.ownerOf(i) == _owner){
-                tokenIds[i-1] = i;
+                tokenIds[currentSize] = i;
+                currentSize++;
+            } else {
+                continue;
             }
-            
         }
         return tokenIds;
     }
