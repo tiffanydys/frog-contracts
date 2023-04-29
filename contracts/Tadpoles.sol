@@ -11,6 +11,7 @@
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
 pragma solidity ^0.8.0;
@@ -22,10 +23,9 @@ contract Tadpoles is ERC721URIStorage, Ownable {
     using Strings for uint256;
     address public incubatorAddress;
     address public minterAddress;
-    uint256 public maxSupply = 200;
     bool public paused = false;
-
-    string[] tadpoleUri = [
+    string[] public tadpoleUri;
+    string[] public initialTadpoleUri = [
       "https://raw.githubusercontent.com/tiffanydys/frogs/main/tadpoles/data/healthy.json",
       "https://raw.githubusercontent.com/tiffanydys/frogs/main/tadpoles/data/chipped.json",
       "https://raw.githubusercontent.com/tiffanydys/frogs/main/tadpoles/data/cracked.json",
@@ -33,21 +33,20 @@ contract Tadpoles is ERC721URIStorage, Ownable {
       "https://raw.githubusercontent.com/tiffanydys/frogs/main/tadpoles/data/dying.json"
     ];
 
-    constructor(
-      string memory _name,
-      string memory _symbol,
-      address _initIncubatorAddress
-    ) ERC721(_name, _symbol) {
-      setIncubatorAddress(_initIncubatorAddress);
+    event Minted(address to, address from, uint256 tokenid);
+
+    constructor() ERC721("Project Dignity x SFL - Tadpole Collection", "PD-T") {
+      setIncubatorAddress(msg.sender);
       setMinterAddress(msg.sender);
+      setTadpoleUri(initialTadpoleUri);
     }
 
     function mint(address[] memory _to, uint256[] memory _mintAmount) public onlyOwner() {
       require(!paused, "Minting is paused.");
-      require(_tokenIdCounter.current() + 1 <= maxSupply, "Max supply reached!");
+
 
       for (uint256 i = 0; i < _to.length; i++) {
-        for (uint256 x = 0; x < _mintAmount[i]; x++) {
+        for (uint256 x = 1; x <= _mintAmount[i]; x++) {
           _tokenIdCounter.increment();
           uint256 tokenId = _tokenIdCounter.current();
           _safeMint(_to[i], tokenId);
@@ -80,8 +79,8 @@ contract Tadpoles is ERC721URIStorage, Ownable {
       address to,
       uint256 tokenId
     ) internal override {
-      // break tadpole if it wasn't transfered from/to minter/incubator addresses
-      if ((from != incubatorAddress && to !=incubatorAddress) && (from != minterAddress && to != minterAddress)) {
+       // break tadpole if it wasn't transfered from/to minter/incubator addresses
+      if (!(from == incubatorAddress || to == incubatorAddress || from == minterAddress || to == minterAddress || from == address(this) || from == 0x0000000000000000000000000000000000000000)) {
         breakTadpole(tokenId);
       }
     }
@@ -95,15 +94,18 @@ contract Tadpoles is ERC721URIStorage, Ownable {
     }
 
     function setIncubatorAddress(address _newIncubatorAddress) public onlyOwner() {
-        incubatorAddress = _newIncubatorAddress;
+      incubatorAddress = _newIncubatorAddress;
     }
 
     function setMinterAddress(address _newMinterAddress) public onlyOwner() {
-        minterAddress = _newMinterAddress;
+      minterAddress = _newMinterAddress;
+    }
+
+    function setTadpoleUri(string[] memory _newTadpoleUri) public onlyOwner() {
+      tadpoleUri = _newTadpoleUri;
     }
 
     function pause(bool _state) public onlyOwner {
       paused = _state;
     }
-
 }
