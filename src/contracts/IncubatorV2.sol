@@ -74,7 +74,7 @@ contract TadpoleIncubatorV2 is IERC721Receiver, Ownable {
             require(tadpoleNft.ownerOf(tadpoleId) == msg.sender, "You are not the owner of this tadpole NFT.");
             require(vault[tadpoleId].tadpoleTokenId == 0, "You have already incubated your tadpole.");
 
-            if (frogId != 0) {
+            if (frogId != 0) { // if there is a frog
                 require(frogNft.ownerOf(frogId) == msg.sender, "You are not the owner of this frog NFT.");
                 frogNft.transferFrom(msg.sender, address(this), frogId);
             }
@@ -100,15 +100,17 @@ contract TadpoleIncubatorV2 is IERC721Receiver, Ownable {
             frogId = frogTokenIds[i];
             tadpoleId = tadpoleTokenIds[i];
             Incubate memory incubated = vault[tadpoleId];
+            require(incubated.frogTokenId == frogId, "Unstake not allowed.");
+            require(incubated.tadpoleTokenId == tadpoleId, "Unstake not allowed.");
             require(incubated.owner == msg.sender, "You are not the owner of this incubator.");
-
+            
             delete vault[tadpoleId];
             emit Removed(account, frogId, tadpoleId, block.timestamp);
 
-            if (frogId != 0) {
-                frogNft.transferFrom(address(this), account, frogId);
+            if (frogId != 0) { // if there is a frog
+                frogNft.transferFrom(address(this), account, incubated.frogTokenId);
             }
-            tadpoleNft.transferFrom(address(this), account, tadpoleId);
+            tadpoleNft.transferFrom(address(this), account, incubated.tadpoleTokenId);
         }
     }
 
@@ -130,6 +132,8 @@ contract TadpoleIncubatorV2 is IERC721Receiver, Ownable {
             tadpoleId = tadpoleIds[i];
             frogId = frogIds[i];
             Incubate memory incubated = vault[tadpoleId];
+            require(incubated.frogTokenId == frogId, "Claim not allowed.");
+            require(incubated.tadpoleTokenId == tadpoleId, "Claim not allowed.");
             require(incubated.owner == account, "You are not the owner of this incubator.");
             uint256 incubatedAt = incubated.timestamp;
             uint256 multiplier = getTadpoleMultiplier(tadpoleId);
@@ -296,6 +300,14 @@ contract TadpoleIncubatorV2 is IERC721Receiver, Ownable {
 
     function setRewardsMultiplier(uint256[] memory _newRewardsMultiplier) public onlyOwner() {
         rewardsMultiplier = _newRewardsMultiplier;
+    }
+
+    function setRarityMultiplier(uint256[] memory _newRarityMultiplier) public onlyOwner() {
+        rarityMultiplier = _newRarityMultiplier;
+    }
+
+    function setFrogRarities(uint256[] memory _newFrogRarities) public onlyOwner() {
+        frogRarities = _newFrogRarities;
     }
 }
 
